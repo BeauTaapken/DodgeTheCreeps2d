@@ -1,9 +1,11 @@
 extends Area2D
+class_name Player
 signal hit
 
 @export var speed : int = 400
 
-@onready var animated_sprite_2d : AnimatedSprite2D = (%AnimatedSprite2D as AnimatedSprite2D)
+@onready var player_animation : AnimatedSprite2D = (%AnimatedSprite2D as AnimatedSprite2D)
+@onready var player_collision : CollisionShape2D = (%CollisionShape2D as CollisionShape2D)
 
 var screen_size : Vector2
 
@@ -24,17 +26,27 @@ func _process(delta: float) -> void:
 	
 	if velocity.length() > 0:
 		velocity = velocity.normalized() * speed
-		animated_sprite_2d.play()
+		player_animation.play()
 	else:
-		animated_sprite_2d.stop()
+		player_animation.stop()
 	
 	position += velocity * delta
 	position = position.clamp(Vector2.ZERO, screen_size)
 	
 	if velocity.x != 0:
-		animated_sprite_2d.animation = "walk"
-		animated_sprite_2d.flip_v = false
-		animated_sprite_2d.flip_h = velocity.x < 0
+		player_animation.animation = "walk"
+		player_animation.flip_v = false
+		player_animation.flip_h = velocity.x < 0
 	elif velocity.y != 0:
-		animated_sprite_2d.animation = "up"
-		animated_sprite_2d.flip_v = velocity.y > 0
+		player_animation.animation = "up"
+		player_animation.flip_v = velocity.y > 0
+
+func _on_body_entered(_body: Node2D) -> void:
+	hide()
+	hit.emit()
+	player_collision.set_deferred("disabled", true)
+
+func start(pos: Vector2) -> void:
+	position = pos
+	show()
+	player_collision.disabled = false
